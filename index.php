@@ -4,7 +4,7 @@
  *
  * Plugin Name: Get Price
  * Plugin URI:  https://ravandsoft.com
- * Description: Give me a link and i find price that (don't forgot that link should belong to a product) ☺😉
+ * Description: Give me a link and i will find price that (don't forgot that link should belong to a product) ☺😉
  * Version:     1.0
  * Author:      S Morteza Yasrebi
  * Author URI:  https://ravandsoft.com
@@ -17,8 +17,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 // Assuming you installed from Composer:
 require "vendor/autoload.php";
 use PHPHtmlParser\Dom;
-
-
 
 function smGetPrice(){
 	wp_enqueue_style('sm-bootstrap', plugins_url('bootstrap.rtl.min.css' , __FILE__), false, false);
@@ -41,7 +39,7 @@ function smGetPrice(){
 			<input type="text" class="form-control" id="exampleFormControlInput1" placeholder="وارد کنید" name="product-address">
 		</div>
 		<div class="mb-3">
-			<label for="exampleFormControlInput2" class="form-label fs-6">درصد سود شما :</label>
+			<label for="exampleFormControlInput2" class="form-label fs-6"></label>
 			<input type="number" class="form-control" id="exampleFormControlInput2" placeholder="0%" name="product-percent">
 		</div>
 		<div class="mb-3">
@@ -57,18 +55,19 @@ add_shortcode('sm-get-price', 'smGetPrice');
 function bbloomer_add_custom_field_to_variations( $loop, $variation_data, $variation ) {
 	woocommerce_wp_text_input(
 		array(
-			'id' => 'custom_field[' . $loop . ']',
+			'id' => 'target-product[' . $loop . ']',
 			'class' => 'short',
-			'label' => __( 'Custom Field', 'woocommerce' ),
-			'value' => get_post_meta($variation->ID, '_sku', true)
+			'label' => 'آدرس محصول مورد نظر :',
+			'value' => get_post_meta($variation->ID, 'target-product-address', true)
 		)
 	);
 	woocommerce_wp_text_input(
 		array(
-			'id' => 'custom_field[' . $loop . ']',
+			'id' => 'interest-rates[' . $loop . ']',
 			'class' => 'short',
-			'label' => __( 'Custom Field2', 'woocommerce' ),
-			'value' => get_post_meta($variation->ID, '_sku', true)
+			'type' => 'number',
+			'label' => 'درصد سود شما :',
+			'value' => get_post_meta($variation->ID, 'interest-rates', true)
 		)
 	);
 }
