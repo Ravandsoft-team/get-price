@@ -14,6 +14,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 	die( 'Invalid request.' );
 }
 
+add_action('rest_api_init', 
+    function () {
+        register_rest_route('smprice', '/get', array(
+            'methods' => 'GET',
+            'callback' => 'smGetPrice',
+        ) );
+    }
+);
+
 // Assuming you installed from Composer:
 require "vendor/autoload.php";
 use PHPHtmlParser\Dom;
@@ -24,12 +33,14 @@ function smGetPrice(){
 	$start = microtime(true);
 	global $wpdb;
 	$post_ids = $wpdb->get_results("SELECT `ID` FROM {$wpdb->posts} WHERE `post_type` IN ('product','product_variation')");
-	
+	// return $post_ids;
 	$post_get = [];
 	foreach ($post_ids as $post_id) {
 		$url = get_post_meta($post_id->ID,'target-url', true);
 		$percent = get_post_meta($post_id->ID,'interest-rates', true);
 		$updater = get_post_meta($post_id->ID,'price-updater', true);
+
+		if($url || $percent || $updater)continue;
 
 		if($url && $percent && $updater != 'yes'){
 			array_push($post_get, $post_id->ID);
@@ -47,10 +58,10 @@ function smGetPrice(){
 	}
 
 	$time_elapsed_secs = microtime(true) - $start;
-	return [
-		'the_posts' => $post_get,
-		'time_elapsed' , $time_elapsed_secs
-	];
+	// return [
+	// 	'the_posts' => $post_get,
+	// 	'time_elapsed' , $time_elapsed_secs
+	// ];
 }
-add_action('init', 'smGetPrice');
+// add_action('init', 'smGetPrice');
 // smGetPrice();
