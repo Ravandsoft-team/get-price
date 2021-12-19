@@ -19,6 +19,7 @@ add_action('rest_api_init',
         register_rest_route('smprice', '/get', array(
             'methods' => 'GET',
             'callback' => 'smGetPrice',
+			'permission_callback' => '__return_true'
         ) );
     }
 );
@@ -39,13 +40,17 @@ function smGetPrice(){
 		$url = get_post_meta($post_id->ID,'target-url', true);
 		$percent = get_post_meta($post_id->ID,'interest-rates', true);
 		$updater = get_post_meta($post_id->ID,'price-updater', true);
-
-		if($url || $percent || $updater)continue;
-
+		
+		if(empty($updater) || !$updater || count($updater) != 3 )$updater = 'no';
+	
 		if($url && $percent && $updater != 'yes'){
 			array_push($post_get, $post_id->ID);
 			$dom = new Dom;
 			$dom->loadFromUrl($url);
+
+			$product_availability = $dom->find('[property="product:availability"]');
+			$p_a_content = $product_availability->getAttribute('content');
+
 			$tag_price = $dom->find('.goods-price .price');
 			$html = $tag_price->innerHtml;
 			$price = (int)str_replace(',', '', $html);
@@ -54,14 +59,21 @@ function smGetPrice(){
 			$reg_price = $toman + ($toman * ($percent / 100)); 
 			$reg_price = floor($reg_price/1000)*1000;
 			update_post_meta($post_id->ID, '_regular_price' , $reg_price);
+
+			$stock_status = ($p_a_content == 'in stock') ? 'instock' : 'outofstock';
+			if($stock_status  == 'outofstock')update_post_meta($post_id->ID, '_stock', 0);
+			wp_set_post_terms($post_id->ID, $stock_status, 'product_visibility', true );
+			update_post_meta($post_id->ID, '_stock_status', $stock_status);
 		}
 	}
 
 	$time_elapsed_secs = microtime(true) - $start;
+	$content = 'time_elapsed : ' . date("H:i:s",$time_elapsed_secs) .PHP_EOL;
+	file_put_contents('log.txt',$content , FILE_APPEND);
 	// return [
 	// 	'the_posts' => $post_get,
 	// 	'time_elapsed' , $time_elapsed_secs
 	// ];
 }
 // add_action('init', 'smGetPrice');
-// smGetPrice();
+add_shortcode('smGetPrice', 'smGetPrice');
