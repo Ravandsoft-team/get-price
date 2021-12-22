@@ -84,22 +84,53 @@ function smGetPrice(){
 // add_shortcode('smGetPrice', 'smGetPrice');
 
 
-// function getasdlk(){
-// 	$query = array(
-// 		'post_type' => 'product_variation',
-// 		'posts_per_page' => -1,
-// 		'meta_query' => array(
-// 			array(
-// 				'key' => '_stock_status',
-// 				'value' => 'outofstock'
-// 			),
-// 		)
-// 	);
-// 	$wp_query = query_posts( $query );
+function getasdlk(){
+	// $query = array(
+	// 	'post_type' => 'product_variation',
+	// 	'posts_per_page' => -1,
+	// 	'meta_query' => array(
+	// 		array(
+	// 			'key' => '_price',
+	// 			'value' => '0'
+	// 		),
+	// 	)
+	// );
+	// $wp_query = query_posts( $query );
 
-// 	foreach ($wp_query as $wp_quer) {
-// 		print_r($wp_quer->ID);
-// 		update_post_meta($wp_quer->ID , '_price' , 0);
-// 	}
-// }
+	// foreach ($wp_query as $wp_quer) {
+	// 	print_r($wp_quer->ID);
+	// 	update_post_meta($wp_quer->ID , '_stock_status' , 'outofstock');
+	// }
+
+	global $wpdb;
+	// $post_ids = $wpdb->get_results("SELECT `ID` FROM `{$wpdb->posts}` WHERE `post_type` IN ('product_variation','product')");	
+	// $post_ids = $wpdb->get_results("SELECT `ID` FROM `{$wpdb->posts}` WHERE `post_type` LIKE 'product'");	
+	foreach ($post_ids as $post_id) {
+		// $handle=new WC_Product_Variable($post_id->ID);
+		// $variations = $handle->get_children();
+		// if(isset($variations) && !empty($variations)){
+			
+		// 	$prod = [];
+		// 	foreach ($variations as $variation) {
+		// 		$status = get_post_meta($variation, '_stock_status', true);
+		// 		$prod[$post_id->ID] = [$status];
+		// 	}
+		// }
+		// echo '<br>';
+		// if(($prod[$post_id->ID])[0] == 'instock'){
+		// 	update_post_meta($post_id->ID, '_stock_status', 'instock');
+		// }
+		
+		// $status = get_post_meta($post_id->ID, '_stock_status', true);
+		// echo '<br>';
+		// print_r($status);
+		// if($status == 'instock'){
+		// 	update_post_meta($post_id->ID, 'sm-price-stock', 1);
+		// }else{
+		// 	update_post_meta($post_id->ID, 'sm-price-stock', 0);
+		// 	update_post_meta($post_id->ID, '_price', 0);
+		// 	update_post_meta($post_id->ID, '_stock_status', 'outofstock');
+		// }
+	}
+}
 // add_shortcode('getasdlk' , 'getasdlk');
