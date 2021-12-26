@@ -101,36 +101,19 @@ function getasdlk(){
 	// 	print_r($wp_quer->ID);
 	// 	update_post_meta($wp_quer->ID , '_stock_status' , 'outofstock');
 	// }
-
-	global $wpdb;
-	// $post_ids = $wpdb->get_results("SELECT `ID` FROM `{$wpdb->posts}` WHERE `post_type` IN ('product_variation','product')");	
-	// $post_ids = $wpdb->get_results("SELECT `ID` FROM `{$wpdb->posts}` WHERE `post_type` LIKE 'product'");	
-	foreach ($post_ids as $post_id) {
-		// $handle=new WC_Product_Variable($post_id->ID);
-		// $variations = $handle->get_children();
-		// if(isset($variations) && !empty($variations)){
-			
-		// 	$prod = [];
-		// 	foreach ($variations as $variation) {
-		// 		$status = get_post_meta($variation, '_stock_status', true);
-		// 		$prod[$post_id->ID] = [$status];
-		// 	}
-		// }
-		// echo '<br>';
-		// if(($prod[$post_id->ID])[0] == 'instock'){
-		// 	update_post_meta($post_id->ID, '_stock_status', 'instock');
-		// }
-		
-		// $status = get_post_meta($post_id->ID, '_stock_status', true);
-		// echo '<br>';
-		// print_r($status);
-		// if($status == 'instock'){
-		// 	update_post_meta($post_id->ID, 'sm-price-stock', 1);
-		// }else{
-		// 	update_post_meta($post_id->ID, 'sm-price-stock', 0);
-		// 	update_post_meta($post_id->ID, '_price', 0);
-		// 	update_post_meta($post_id->ID, '_stock_status', 'outofstock');
-		// }
-	}
+	
+	// $args = array(
+	// 	'post_type' => 'product',
+	// 	'post_status' => 'publish',
+	// 	'category_name' => 'mobile',
+	// 	'posts_per_page' => -1,
+	// );
+	
+	// $arr_posts = new WP_Query( $args );
+	// while ( $arr_posts->have_posts() ) :
+	// 	echo $arr_posts->the_ID();
+	// endwhile;
+	// $products = get_posts($args);
+	// print_r(count($arr_posts));
 }
-// add_shortcode('getasdlk' , 'getasdlk');
+add_shortcode('getasdlk' , 'getasdlk');
