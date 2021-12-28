@@ -1,4 +1,5 @@
 
+<?php
 // 1. Add custom field input @ Product Data > Variations > Single Variation
 function sm_add_custom_field_to_variations( $loop, $variation_data, $variation ) {
 	woocommerce_wp_text_input(

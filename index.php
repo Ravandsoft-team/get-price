@@ -4,7 +4,7 @@
  *
  * Plugin Name: Get Price
  * Plugin URI:  https://ravandsoft.com
- * Description: Give me a link and i will find price that (don't forgot that link should belong to a product) ☺😉
+ * Description: Give me a link and i will find price that (don't forgot that link should belong to a product) 😉
  * Version:     1.0
  * Author:      S Morteza Yasrebi
  * Author URI:  https://ravandsoft.com
@@ -19,6 +19,15 @@ add_action('rest_api_init',
         register_rest_route('smprice', '/get', array(
             'methods' => 'GET',
             'callback' => 'smGetPrice',
+			'permission_callback' => '__return_true'
+        ) );
+    }
+);
+add_action('rest_api_init', 
+    function () {
+        register_rest_route('smprice', '/product-status', array(
+            'methods' => 'GET',
+            'callback' => 'smproductStatus',
 			'permission_callback' => '__return_true'
         ) );
     }
@@ -43,7 +52,7 @@ function smGetPrice(){
 		
 		if(empty($updater) || !$updater || count($updater) != 3 )$updater = 'no';
 	
-		if($url && $percent && $updater != 'yes'){
+		if(isset($url) && !empty($url) && isset($percent) && !empty($percent) && $updater != 'yes'){
 			array_push($post_get, $post_id->ID);
 			$dom = new Dom;
 			$dom->loadFromUrl($url);
@@ -63,57 +72,30 @@ function smGetPrice(){
 			if($stock_status  == 'outofstock'){
 				update_post_meta($post_id->ID, '_stock', 0);
 				update_post_meta($post_id->ID, '_regular_price' , 0);
-			}else{
+				update_post_meta($post_id->ID, '_stock_status', $stock_status);
+				wp_set_post_terms($post_id->ID, $stock_status, 'product_visibility', true );
+			}elseif($stock_status  == 'instock'){
 				update_post_meta($post_id->ID, '_stock', 1);
 				update_post_meta($post_id->ID, '_regular_price' , $reg_price);
+				update_post_meta($post_id->ID, '_stock_status', $stock_status);
+				wp_set_post_terms($post_id->ID, $stock_status, 'product_visibility', true );
 			}
-			wp_set_post_terms($post_id->ID, $stock_status, 'product_visibility', true );
-			update_post_meta($post_id->ID, '_stock_status', $stock_status);
 		}
 	}
 
 	$time_elapsed_secs = microtime(true) - $start;
 	$content = 'time_elapsed : ' . date("H:i:s",$time_elapsed_secs) .PHP_EOL;
 	file_put_contents('log.txt',$content , FILE_APPEND);
-	// return [
-	// 	'the_posts' => $post_get,
-	// 	'time_elapsed' , $time_elapsed_secs
-	// ];
 }
 // add_action('init', 'smGetPrice');
 // add_shortcode('smGetPrice', 'smGetPrice');
 
-
-function getasdlk(){
-	// $query = array(
-	// 	'post_type' => 'product_variation',
-	// 	'posts_per_page' => -1,
-	// 	'meta_query' => array(
-	// 		array(
-	// 			'key' => '_price',
-	// 			'value' => '0'
-	// 		),
-	// 	)
-	// );
-	// $wp_query = query_posts( $query );
-
-	// foreach ($wp_query as $wp_quer) {
-	// 	print_r($wp_quer->ID);
-	// 	update_post_meta($wp_quer->ID , '_stock_status' , 'outofstock');
-	// }
-	
-	// $args = array(
-	// 	'post_type' => 'product',
-	// 	'post_status' => 'publish',
-	// 	'category_name' => 'mobile',
-	// 	'posts_per_page' => -1,
-	// );
-	
-	// $arr_posts = new WP_Query( $args );
-	// while ( $arr_posts->have_posts() ) :
-	// 	echo $arr_posts->the_ID();
-	// endwhile;
-	// $products = get_posts($args);
-	// print_r(count($arr_posts));
+function smproductStatus(){
+	$args = array([
+		'order' => 'DESC',
+		'orderby' => 'date'
+	]);
+	$query = new WC_Product_Query( $args );
+	$query->get_products();
+	print_r($query);
 }
-add_shortcode('getasdlk' , 'getasdlk');
