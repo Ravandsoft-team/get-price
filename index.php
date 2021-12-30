@@ -23,15 +23,15 @@ add_action('rest_api_init',
         ) );
     }
 );
-// add_action('rest_api_init', 
-//     function () {
-//         register_rest_route('smprice', '/product-status', array(
-//             'methods' => 'GET',
-//             'callback' => 'smproductStatus',
-// 			'permission_callback' => '__return_true'
-//         ) );
-//     }
-// );
+add_action('rest_api_init', 
+    function () {
+        register_rest_route('smprice', '/product-status', array(
+            'methods' => 'GET',
+            'callback' => 'smproductStatus',
+			'permission_callback' => '__return_true'
+        ) );
+    }
+);
 
 // Assuming you installed from Composer:
 require "vendor/autoload.php";
@@ -43,17 +43,19 @@ function smGetPrice(){
 	$start = microtime(true);
 	global $wpdb;
 	$post_ids = $wpdb->get_results("SELECT `ID` FROM {$wpdb->posts} WHERE `post_type` IN ('product','product_variation')");
-	// return $post_ids;
+	// $posts = $wpdb->get_results("SELECT `post_id` FROM `{$wpdb->postmeta}` WHERE `meta_key` LIKE 'target-url'");
+	// return $posts;
 	$post_get = [];
-	foreach ($post_ids as $post_id) {
-		$url = get_post_meta($post_id->ID,'target-url', true);
-		$percent = get_post_meta($post_id->ID,'interest-rates', true);
-		$updater = get_post_meta($post_id->ID,'price-updater', true);
+	foreach ($posts as $post) {
+		$post_id = $post->post_id;
+		$url = get_post_meta($post_id,'target-url', true);
+		$percent = get_post_meta($post_id,'interest-rates', true);
+		$updater = get_post_meta($post_id,'price-updater', true);
 		
 		if(empty($updater) || !$updater || count($updater) != 3 )$updater = 'no';
 	
 		if(isset($url) && !empty($url) && isset($percent) && !empty($percent) && $updater != 'yes'){
-			array_push($post_get, $post_id->ID);
+			array_push($post_get, $post_id);
 			$dom = new Dom;
 			$dom->loadFromUrl($url);
 
@@ -70,20 +72,20 @@ function smGetPrice(){
 
 			$stock_status = ($p_a_content == 'in stock') ? 'instock' : 'outofstock';
 
-			$variation = wc_get_product($post_id->ID);
-			$product = wc_get_product( $variation->get_parent_id() );
+			// $variation = wc_get_product($post_id);
+			// $product = wc_get_product( $variation->get_parent_id() );
 			if($stock_status  == 'outofstock'){
-				update_post_meta($product->get_id(), '_stock', 0);
-				update_post_meta($post_id->ID, '_stock', 0);
-				update_post_meta($post_id->ID, '_regular_price' , 0);		
-			}elseif($stock_status  == 'instock'){
-				update_post_meta($post_id->ID, '_stock', 1);
-				update_post_meta($post_id->ID, '_regular_price' , $reg_price);
+				// update_post_meta($product->get_id(), '_stock', 0);
+				update_post_meta($post_id, '_stock', 0);
+				update_post_meta($post_id, '_regular_price' , 0);		
+			}else{
+				update_post_meta($post_id, '_stock', 1);
+				update_post_meta($post_id, '_regular_price' , $reg_price);
 			}
-			update_post_meta($product->get_id(), '_stock_status', $stock_status);
-			wp_set_post_terms($product->get_id(), $stock_status, 'product_visibility', true );
-			update_post_meta($post_id->ID, '_stock_status', $stock_status);
-			wp_set_post_terms($post_id->ID, $stock_status, 'product_visibility', true );
+			// update_post_meta($product->get_id(), '_stock_status', $stock_status);
+			// wp_set_post_terms($product->get_id(), $stock_status, 'product_visibility', true );
+			update_post_meta($post_id, '_stock_status', $stock_status);
+			wp_set_post_terms($post_id, $stock_status, 'product_visibility', true ); 
 		}
 	}
 
@@ -95,11 +97,18 @@ function smGetPrice(){
 // add_shortcode('smGetPrice', 'smGetPrice');
 
 function smproductStatus(){
-	$args = array([
-		'order' => 'DESC',
-		'orderby' => 'date'
-	]);
-	$query = new WC_Product_Query( $args );
-	$query->get_products();
-	print_r($query);
+	$posts = $wpdb->get_results("SELECT `post_id` FROM `{$wpdb->postmeta}` WHERE `meta_key` LIKE 'target-url'");
+	foreach ($posts as $post) {
+		$post_id = $post->post_id;
+		$stock_status = get_post_meta($post_id, '_stock_status', true);
+		$variation = wc_get_product($post_id);
+		$product = wc_get_product( $variation->get_parent_id() );
+		if($stock_status == 'instock'){
+			update_post_meta($product->get_id(), '_stock_status', 'instock');
+			wp_set_post_terms($product->get_id(), 'instock', 'product_visibility', true );
+		}else{
+			update_post_meta($product->get_id(), '_stock', 0);
+			update_post_meta($product->get_id(), '_stock_status', 'outofstock');
+		}
+	}
 }
