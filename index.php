@@ -42,25 +42,26 @@ function smGetPrice(){
 	// wp_enqueue_script('sm-bootstrap', plugins_url('bootstrap.bundle.min.js' ,__FILE__), array('jquery'), true);
 	$start = microtime(true);
 	global $wpdb;
-	$post_ids = $wpdb->get_results("SELECT `ID` FROM {$wpdb->posts} WHERE `post_type` IN ('product','product_variation')");
+	$offset = $_GET['offset'];
+	$limit = $_GET['limit'];
+	$posts = $wpdb->get_results("SELECT `ID` FROM {$wpdb->posts} WHERE `post_type` IN ('product','product_variation') LIMIT $offset,$limit");
 	// $posts = $wpdb->get_results("SELECT `post_id` FROM `{$wpdb->postmeta}` WHERE `meta_key` LIKE 'target-url'");
 	// return $posts;
 	$post_get = [];
 	foreach ($posts as $post) {
-		$post_id = $post->post_id;
-		$url = get_post_meta($post_id,'target-url', true);
-		$percent = get_post_meta($post_id,'interest-rates', true);
-		$updater = get_post_meta($post_id,'price-updater', true);
+		$post_id = $post->ID;
+		$url = get_post_meta($post_id, 'target-url', true);
+		$percent = get_post_meta($post_id, 'interest-rates', true);
+		$updater = get_post_meta($post_id, 'price-updater', true);
 		
 		if(empty($updater) || !$updater || count($updater) != 3 )$updater = 'no';
 	
 		if(isset($url) && !empty($url) && isset($percent) && !empty($percent) && $updater != 'yes'){
-			array_push($post_get, $post_id);
 			$dom = new Dom;
 			$dom->loadFromUrl($url);
 
 			$product_availability = $dom->find('[property="product:availability"]');
-			$p_a_content = $product_availability->getAttribute('content');
+			$p_a_content = ($product_availability) ? $product_availability->getAttribute('content') : false;
 
 			$tag_price = $dom->find('.goods-price .price');
 			$html = $tag_price->innerHtml;
@@ -94,7 +95,7 @@ function smGetPrice(){
 	file_put_contents('log.txt',$content , FILE_APPEND);
 }
 // add_action('init', 'smGetPrice');
-// add_shortcode('smGetPrice', 'smGetPrice');
+add_shortcode('smGetPrice', 'smGetPrice');
 
 function smproductStatus(){
 	$posts = $wpdb->get_results("SELECT `post_id` FROM `{$wpdb->postmeta}` WHERE `meta_key` LIKE 'target-url'");
