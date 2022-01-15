@@ -68,7 +68,7 @@ function smGetPrice(){
 			$price = (int)str_replace(',', '', $html);
 			$toman = $price * 0.1;
 
-			$reg_price = $toman + ($toman * ($percent / 100)); 
+			$reg_price = ($toman * (($percent / 100) + 1)); 
 			$reg_price = floor($reg_price/1000)*1000;
 
 			$stock_status = ($p_a_content == 'in stock') ? 'instock' : 'outofstock';
@@ -98,18 +98,52 @@ function smGetPrice(){
 add_shortcode('smGetPrice', 'smGetPrice');
 
 function smproductStatus(){
+	global $wpdb;
 	$posts = $wpdb->get_results("SELECT `post_id` FROM `{$wpdb->postmeta}` WHERE `meta_key` LIKE 'target-url'");
+	$products = [];
 	foreach ($posts as $post) {
 		$post_id = $post->post_id;
-		$stock_status = get_post_meta($post_id, '_stock_status', true);
 		$variation = wc_get_product($post_id);
 		$product = wc_get_product( $variation->get_parent_id() );
-		if($stock_status == 'instock'){
-			update_post_meta($product->get_id(), '_stock_status', 'instock');
-			wp_set_post_terms($product->get_id(), 'instock', 'product_visibility', true );
-		}else{
-			update_post_meta($product->get_id(), '_stock', 0);
-			update_post_meta($product->get_id(), '_stock_status', 'outofstock');
+		// echo '<br>';
+		// echo $post_id;
+		// echo $stock_status;
+		// echo $product->get_id();
+		// echo '<br>';
+		if($product)
+		$products[$product->get_id()][] = $post_id;
+		// $the_id = ($product) ? $product->get_id() : $post_id;
+		// if($stock_status == 'instock'){
+		// 	update_post_meta($the_id, '_stock_status', 'instock');
+		// 	wp_set_post_terms($the_id, 'instock', 'product_visibility', true );
+		// }else{
+		// 	update_post_meta($the_id, '_stock', 0);
+		// 	update_post_meta($the_id, '_stock_status', 'outofstock');
+		// }
+	}
+	$products2 = [];
+	foreach($products as $key => $theid){
+		for($i=0; $i< count($theid); $i++){
+			$stock_status = get_post_meta($theid[$i], '_stock_status', true);
+			$products2[$key][] = $stock_status;
 		}
 	}
+	// echo '<pre>';
+	// print_r($products2);
+	// echo '</pre>';
+	// $products3 = [];
+	foreach($products2 as $key => $prod){
+		if(in_array("instock" , $prod)){
+			// $products3[$key] = 'instock';
+			update_post_meta($key, '_stock_status', 'instock');
+			wp_set_post_terms($key, 'instock', 'product_visibility', true );
+		}else{
+			// $products3[$key] = 'outofstock';
+			update_post_meta($key, '_stock', 0);
+			update_post_meta($key, '_stock_status', 'outofstock');
+		}
+	}
+	// echo '<pre>';
+	// print_r($products3);
+	// echo '</pre>';
 }
