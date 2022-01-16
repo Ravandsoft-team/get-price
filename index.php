@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 add_action('rest_api_init', 
     function () {
-        register_rest_route('smprice', '/get', array(
+        register_rest_route('smprice', '/get/(?P<offset>\d+)/(?P<limit>\d+)/', array(
             'methods' => 'GET',
             'callback' => 'smGetPrice',
 			'permission_callback' => '__return_true'
@@ -37,13 +37,17 @@ add_action('rest_api_init',
 require "vendor/autoload.php";
 use PHPHtmlParser\Dom;
 
-function smGetPrice(){
+function smGetPrice($data){
 	// wp_enqueue_style('sm-bootstrap', plugins_url('bootstrap.rtl.min.css' , __FILE__), false, false);
 	// wp_enqueue_script('sm-bootstrap', plugins_url('bootstrap.bundle.min.js' ,__FILE__), array('jquery'), true);
 	$start = microtime(true);
 	global $wpdb;
-	$offset = $_GET['offset'];
-	$limit = $_GET['limit'];
+
+	// $offset = $_GET['offset'];
+	// $limit = $_GET['limit'];
+	$offset = $data['offset'];
+	$limit = $data['limit'];
+
 	$posts = $wpdb->get_results("SELECT `ID` FROM {$wpdb->posts} WHERE `post_type` IN ('product','product_variation') LIMIT $offset,$limit");
 	// $posts = $wpdb->get_results("SELECT `post_id` FROM `{$wpdb->postmeta}` WHERE `meta_key` LIKE 'target-url'");
 	// return $posts;
@@ -87,11 +91,12 @@ function smGetPrice(){
 			// wp_set_post_terms($product->get_id(), $stock_status, 'product_visibility', true );
 			update_post_meta($post_id, '_stock_status', $stock_status);
 			wp_set_post_terms($post_id, $stock_status, 'product_visibility', true ); 
+			array_push($post_get ,$post_id);
 		}
 	}
 
 	$time_elapsed_secs = microtime(true) - $start;
-	$content = 'time_elapsed : ' . date("H:i:s",$time_elapsed_secs) .PHP_EOL;
+	$content = 'date : ' . date("Y:m:d H:i:s") . ' | time_elapsed : ' . date("H:i:s",$time_elapsed_secs) . ' | posts :' . json_encode($post_get) . PHP_EOL;
 	file_put_contents('log.txt',$content , FILE_APPEND);
 }
 // add_action('init', 'smGetPrice');
